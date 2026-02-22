@@ -79,6 +79,3 @@ fx = new GlassOverlayFX({
 fx.refreshScene().then(function (ok) {
     if (ok) console.log("Page texture captured via " + captureEngineLabel() + ". Particles: " + fx.particles.length);
 });
-} catch (err) {
-console.log("WebGL unavailable: " + err.message);
-}
