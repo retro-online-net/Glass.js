@@ -540,7 +540,7 @@
       observeCssChanges: true,
       cssAutoRefreshMs: 1200,
       cssImmediateCapture: true,
-      cssImmediateCaptureDebounceMs: 60,
+      cssImmediateCaptureDebounceMs: 90,
       observeTargetContentChanges: true,
       targetImmediateCapture: true,
       targetImmediateCaptureDebounceMs: 40,
@@ -548,10 +548,10 @@
       watchBackgroundImageUrlChanges: true,
       backgroundImageRefreshDebounceMs: 90,
       backgroundImageLoadTimeoutMs: 4000,
-      backgroundImageScanLimit: 420,
+      backgroundImageScanLimit: 120,
       strictSameOriginCaptureUrls: false,
-      forceVisualFlushBeforeCapture: true,
-      clearHtml2canvasCacheBeforeCapture: true,
+      forceVisualFlushBeforeCapture: false,
+      clearHtml2canvasCacheBeforeCapture: false,
       autoLoadHtml2Canvas: true,
       html2canvasUrl: "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
       html2canvasOptions: {
@@ -1182,7 +1182,8 @@
         subtree: true,
         childList: true,
         characterData: true,
-        attributes: true
+        attributes: true,
+        attributeFilter: ["style", "class", "src", "srcset", "href"]
       });
     }
 
@@ -1251,7 +1252,7 @@
 
   GlassOverlayFX.prototype._collectBackgroundUrlsFromNode = function (node, outMap, maxNodes) {
     if (!node) return;
-    var limit = Math.max(8, Number(maxNodes == null ? 420 : maxNodes));
+    var limit = Math.max(8, Number(maxNodes == null ? 120 : maxNodes));
     var stack = [];
     if (node.nodeType === 1) stack.push(node);
     else if (node.nodeType === 3 && node.parentElement) stack.push(node.parentElement);
@@ -1387,9 +1388,13 @@
     var cap = this.config.capture || {};
     if (!cap.enabled || cap.watchBackgroundImageUrlChanges === false) return false;
     if (!mutations || !mutations.length) return false;
+    if (this._bgRefreshTimer) {
+      this._queueBackgroundImageFullRefresh([], cap.backgroundImageRefreshDebounceMs);
+      return true;
+    }
 
     var shouldRefresh = false;
-    var scanLimit = Math.max(8, Number(cap.backgroundImageScanLimit == null ? 420 : cap.backgroundImageScanLimit));
+    var scanLimit = Math.max(8, Number(cap.backgroundImageScanLimit == null ? 120 : cap.backgroundImageScanLimit));
     var urlMap = Object.create(null);
 
     for (var i = 0; i < mutations.length; i++) {
@@ -1551,7 +1556,8 @@
         subtree: true,
         childList: true,
         characterData: true,
-        attributes: true
+        attributes: true,
+        attributeFilter: ["style", "class", "src", "srcset", "href"]
       });
     }
 
