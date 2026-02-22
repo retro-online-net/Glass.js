@@ -1,4 +1,5 @@
 /* glass-overlay.js by retroonline.net GPLv3 License 2/22/2026
+ * https://github.com/retro-online-net/Glass.js
  * Lightweight WebGL glass-shape overlay.
  * Usage:
  *   const fx = new GlassOverlayFX({ count: 120 });
