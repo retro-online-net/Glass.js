@@ -176,6 +176,7 @@
   var SHAPE_TRI_BASE_Y = -SHAPE_TRI_TOP * 0.5;
   var SHAPE_TRI_SIDE = TRI_SHADER_SCALE;
   var SHAPE_TRI_CIRCUM = SHAPE_TRI_TOP;
+  var DEFAULT_HTML2CANVAS_URL = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
 
   function translateCollider(collider, tx, ty) {
     collider.cx += tx;
@@ -554,7 +555,7 @@
       forceVisualFlushBeforeCapture: false,
       clearHtml2canvasCacheBeforeCapture: false,
       autoLoadHtml2Canvas: true,
-      html2canvasUrl: "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
+      html2canvasUrl: DEFAULT_HTML2CANVAS_URL,
       html2canvasOptions: {
         useCORS: true,
         allowTaint: false,
@@ -766,7 +767,14 @@
   ].join("\n");
 
   function GlassOverlayFX(options) {
-    this.config = deepMerge(DEFAULTS, options || {});
+    var ctorOptions = options || {};
+    this.config = deepMerge(DEFAULTS, ctorOptions);
+    if (typeof ctorOptions.html2canvasUrl === "string") {
+      var customHtml2CanvasUrl = ctorOptions.html2canvasUrl.trim();
+      if (customHtml2CanvasUrl) {
+        this.config.capture.html2canvasUrl = customHtml2CanvasUrl;
+      }
+    }
     this.canvas = null;
     this.gl = null;
     this.program = null;
@@ -1791,7 +1799,7 @@
     }
 
     var src = (this.config.capture && this.config.capture.html2canvasUrl) ||
-      "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      DEFAULT_HTML2CANVAS_URL;
 
     global.__glassOverlayHtml2CanvasPromise = new Promise(function (resolve, reject) {
       var tag = document.createElement("script");
@@ -3072,6 +3080,31 @@
     this.pointer.active = false;
     this.light.x = clamp(x, 0, 1);
     this.light.y = clamp(y, 0, 1);
+  };
+
+  GlassOverlayFX.prototype.emitRandom = function (x, y, options) {
+    var opts = options || {};
+    var mode = String(opts.mode || "replace").toLowerCase();
+    var append = opts.append === true || mode === "new" || mode === "append" || mode === "add";
+    var count = this.particles ? this.particles.length : 0;
+    if (count <= 0 && !append) append = true;
+
+    var p = this._makeParticle(true);
+    if (typeof x === "number" && isFinite(x)) p.x = x;
+    if (typeof y === "number" && isFinite(y)) p.y = y;
+    if (this.config.physics && this.config.physics.enabled) {
+      p.omega = p.baseSpin;
+    }
+
+    if (append) {
+      this.particles.push(p);
+      this.data = new Float32Array(this.particles.length * 8);
+      return p;
+    }
+
+    var idx = Math.floor(Math.random() * count);
+    this.particles[idx] = p;
+    return p;
   };
 
   GlassOverlayFX.prototype.setConfig = function (patch) {

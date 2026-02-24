@@ -27,6 +27,7 @@ const fx = new GlassOverlayFX({
   gloss: 1,
   opacity: 1.0,
   zIndex: 2147483647,
+  html2canvasUrl: "/vendor/html2canvas.min.js", // optional
   physics: {
     enabled: true,
     restitution: 1,
